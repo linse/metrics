@@ -104,3 +104,21 @@ let lwt_reporter ?tags:(more_tags=[]) ?interval send now =
         (over () ; k ())
   in
   { Metrics.report; now ; at_exit = (fun () -> ()) }
+
+let lwt_reporter_pull ?tags:(more_tags=[]) now =
+  let current_metrics = ref SM.empty in
+  let report ~tags ~data ~over src k =
+    current_metrics := SM.add src (data, tags) !current_metrics;
+    let unblock () = over () ; Lwt.return_unit in
+    Lwt.finalize (fun () -> Lwt.return_unit) unblock |> Lwt.ignore_result ; k ()
+  in
+  let get_data () =
+    SM.fold (fun src (data, tags) acc -> 
+      let str = encode_line_protocol (more_tags @ tags) data (Metrics.Src.name src) in
+      acc ^ str)
+      !current_metrics ""
+  in
+  { Metrics.report; now ; at_exit = (fun () -> ()) }, get_data
+  
+
+

@@ -22,3 +22,5 @@ val lwt_reporter : ?tags:Metrics.tags -> ?interval:int ->
    line protocol} and reports it via [send]. A measurement can be prefixed by an
    optional list of [tags]. If [~interval] is specified and a positive amount of
    milliseconds, each source measurement is reported only once within this interval. *)
+
+val lwt_reporter_pull : ?tags:Metrics.tags -> (unit -> int64) -> Metrics.reporter * (unit -> string)
